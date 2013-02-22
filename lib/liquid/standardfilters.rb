@@ -104,6 +104,7 @@ module Liquid
 
     # Replace occurrences of a string with another
     def replace(input, string, replacement = '')
+      return input if !string || !replacement
       input.to_s.gsub(string, replacement)
     end
 
