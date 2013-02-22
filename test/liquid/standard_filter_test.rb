@@ -37,6 +37,7 @@ class StandardFiltersTest < Test::Unit::TestCase
     assert_equal '1234567890', @filters.truncate('1234567890', 20)
     assert_equal '...', @filters.truncate('1234567890', 0)
     assert_equal '1234567890', @filters.truncate('1234567890')
+    assert_equal 'а...', @filters.truncate('аааааа', 4)
   end
 
   def test_strip

@@ -40,9 +40,11 @@ module Liquid
     # Truncate a string down to x characters
     def truncate(input, length = 50, truncate_string = "...")
       if input.nil? then return end
-      l = length.to_i - truncate_string.length
+      length = length.to_i
+      l = length - truncate_string.scan(/./mu).size
       l = 0 if l < 0
-      input.length > length.to_i ? input[0...l] + truncate_string : input
+      input_chars = input.to_s.scan(/./mu)
+      input_chars.size > length ? input_chars[0...l].join + truncate_string : input
     end
 
     def truncatewords(input, words = 15, truncate_string = "...")
