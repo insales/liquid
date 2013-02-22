@@ -111,6 +111,7 @@ class StandardFiltersTest < Test::Unit::TestCase
 
     assert_equal "07/05/2006", @filters.date(1152098955, "%m/%d/%Y")
     assert_equal "07/05/2006", @filters.date("1152098955", "%m/%d/%Y")
+    assert_equal "#{Date.today.year}", @filters.date('now', '%Y')
   end
 
 
