@@ -1,3 +1,5 @@
+# -*- encoding : utf-8 -*-
+
 require 'test_helper'
 
 class Filters
@@ -137,6 +139,7 @@ class StandardFiltersTest < Test::Unit::TestCase
 
   def test_strip_newlines
     assert_template_result 'abc', "{{ source | strip_newlines }}", 'source' => "a\nb\nc"
+    assert_template_result 'abc', "{{ source | strip_newlines }}", 'source' => "a\rb\rc"
   end
 
   def test_newlines_to_br
