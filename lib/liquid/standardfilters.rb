@@ -201,6 +201,7 @@ module Liquid
 
     # Replace occurrences of a string with another
     def replace(input, string, replacement = ''.freeze)
+      return input if !string || !replacement
       input.to_s.gsub(string.to_s, replacement.to_s)
     end
 
