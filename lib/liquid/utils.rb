@@ -54,6 +54,8 @@ module Liquid
       else
         if obj.respond_to?(:to_number)
           obj.to_number
+        elsif obj.respond_to?(:to_f)
+          BigDecimal.new(obj.to_f.to_s)
         else
           0
         end
