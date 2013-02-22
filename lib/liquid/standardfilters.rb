@@ -70,7 +70,7 @@ module Liquid
 
     # Remove all newlines from the string
     def strip_newlines(input)
-      input.to_s.gsub(/\n/, '')
+      input.to_s.gsub(/[\n\r]/, '')
     end
 
 
