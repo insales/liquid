@@ -377,6 +377,8 @@ class StandardFiltersTest < Minitest::Test
     assert_equal 'a a a', @filters.remove_first("a a a a", 'a ')
     assert_equal ' 1 1 1', @filters.remove_first("1 1 1 1", 1)
     assert_template_result 'a a a', "{{ 'a a a a' | remove_first: 'a ' }}"
+    assert_equal 'a a a a', @filters.remove_first("a a a a", nil)
+    assert_equal 'a a a a', @filters.remove("a a a a", nil)
   end
 
   def test_pipes_in_string_arguments
