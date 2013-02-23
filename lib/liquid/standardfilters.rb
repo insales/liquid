@@ -115,11 +115,13 @@ module Liquid
 
     # remove a substring
     def remove(input, string)
+      return input if !string
       input.to_s.gsub(string, '')
     end
 
     # remove the first occurrences of a substring
     def remove_first(input, string)
+      return input if !string
       input.to_s.sub(string, '')
     end
 
