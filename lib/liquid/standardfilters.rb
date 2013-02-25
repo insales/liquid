@@ -234,7 +234,11 @@ module Liquid
     def modulo(input, operand)
       to_number(input) % to_number(operand)
     end
-
+    
+    def with_delimiter(number, string)
+      number.to_s.reverse.gsub(%r{([0-9]{3}(?=([0-9])))}, "\\1#{string}").reverse
+    end
+    
     private
 
       def to_number(obj)
