@@ -103,7 +103,7 @@ module Liquid
 
     def strip_html(input)
       empty = ''.freeze
-      input.to_s.gsub(/<script.*?<\/script>/m, empty).gsub(/<!--.*?-->/m, empty).gsub(/<style.*?<\/style>/m, empty).gsub(/<.*?>/m, empty)
+      input.to_s.gsub(/<script.*?<\/script>/m, empty).gsub(/<!--.*?-->/m, empty).gsub(/<style.*?<\/style>/m, empty).gsub(/<.*?>/m, empty).gsub('&nbsp;'.freeze, ' '.freeze)
     end
 
     # Remove all newlines from the string
