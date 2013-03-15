@@ -71,6 +71,7 @@ class StandardFiltersTest < Test::Unit::TestCase
     assert_equal 'test', @filters.strip_html("<div id='test'>test</div>")
     assert_equal '', @filters.strip_html("<script type='text/javascript'>document.write('some stuff');</script>")
     assert_equal '', @filters.strip_html(nil)
+    assert_equal 'a  b', @filters.strip_html('a&nbsp;&nbsp;b')
   end
 
   def test_join
