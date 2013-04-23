@@ -4,7 +4,7 @@ class SetLayoutTest < Test::Unit::TestCase
   include Liquid
 
   def test_set_layout
-    tmpl = Liquid::Template.parse '{% set_layout test %}'
+    tmpl = Liquid::Template.parse '{% set_layout "test" %}'
     context = Liquid::Context.new
     assert_equal context.layout, nil
     body = tmpl.render context

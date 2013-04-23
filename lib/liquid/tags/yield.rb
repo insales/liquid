@@ -5,11 +5,11 @@ module Liquid
   # entire contents of the view currently being rendered is inserted.
   #
   # In your layout:
-  #  <title>{% yield title %}</title>
+  #  <title>{% yield 'title' %}</title>
   #  <body>{% yield %}</body>
   #
   # In the view:
-  #  {% content_for title %} The title {% end_content_for %}
+  #  {% content_for 'title' %} The title {% end_content_for %}
   #  The body    
   #
   #
@@ -19,19 +19,20 @@ module Liquid
   #
   #
   class Yield < Tag
-    SYNTAX      = /(#{VariableSignature}+){0,1}/
-    SYNTAX_HELP = "Syntax Error in 'yield' - Valid syntax: yield [name]"
+    SYNTAX      = /(#{QuotedString}+){0,1}/
+    SYNTAX_HELP = "Syntax Error in 'yield' - Valid syntax: yield ['name']"
     EMPTY_YIELD_KEY = '_rendered_template_'
 
     def initialize(tag_name, markup, tokens)
       raise SyntaxError.new(SYNTAX_HELP) unless markup =~ SYNTAX
       @what = $1
-      @what = EMPTY_YIELD_KEY if !@what || @what.empty?
       super
     end
 
     def render(context)
-      res = context.content_for[@what]
+      key = context[@what]
+      key = EMPTY_YIELD_KEY if !key || key.empty?
+      res = context.content_for[key]
       if !res || res.empty?
         ''
       elsif res.is_a?(Array)

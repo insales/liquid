@@ -9,11 +9,11 @@ module Liquid
   # to rendered string.
   #
   # In your layout:
-  #  <title>{% yield title %}</title>
+  #  <title>{% yield 'title' %}</title>
   #  <body>{% yield %}</body>
   #
   # In the view:
-  #  {% content_for title %} The title {% end_content_for %}
+  #  {% content_for 'title' %} The title {% end_content_for %}
   #  The body    
   #
   #
@@ -23,8 +23,8 @@ module Liquid
   #
   #
   class ContentFor < Block
-    SYNTAX      = /(#{VariableSignature}+)/
-    SYNTAX_HELP = "Syntax Error in tag 'content_for' - Valid syntax: content_for [name]"
+    SYNTAX      = /(#{QuotedString}+)/
+    SYNTAX_HELP = "Syntax Error in tag 'content_for' - Valid syntax: content_for 'name'"
 
     def initialize(tag_name, markup, tokens)
       raise SyntaxError.new(SYNTAX_HELP) unless markup =~ SYNTAX
@@ -35,7 +35,7 @@ module Liquid
     def render(context)
       result = ''
       context.stack { result = render_all @nodelist, context }
-      context.content_for[@name] = result
+      context.content_for[context[@name]] = result
       ''
     end
 

@@ -1,10 +1,10 @@
 module Liquid
-  # {% set_layout smth %} sets context.layout = smth
+  # {% set_layout 'smth' %} sets context.layout = smth
   #
   #
   class SetLayout < Tag
-    SYNTAX      = /(#{VariableSignature}+){0,1}/
-    SYNTAX_HELP = "Syntax Error in 'set_layout' - Valid syntax: set_layout [name]"
+    SYNTAX      = /(#{QuotedString}+){0,1}/
+    SYNTAX_HELP = "Syntax Error in 'set_layout' - Valid syntax: set_layout 'name'"
 
     def initialize(tag_name, markup, tokens)
       raise SyntaxError.new(SYNTAX_HELP) unless markup =~ SYNTAX
@@ -13,7 +13,7 @@ module Liquid
     end
 
     def render(context)
-      context.layout = @name
+      context.layout = context[@name]
       ''
     end
   end
