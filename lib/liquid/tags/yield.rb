@@ -18,19 +18,19 @@ module Liquid
   #  <body>The body</body>
   #
   #
-  class Yield < Tag
-    SYNTAX      = /(#{QuotedString}+){0,1}/
+  class Tag::Yield < Tag
+    SYNTAX      = /(.*)/
     SYNTAX_HELP = "Syntax Error in 'yield' - Valid syntax: yield ['name']"
     EMPTY_YIELD_KEY = '_rendered_template_'
 
     def initialize(tag_name, markup, tokens)
       raise SyntaxError.new(SYNTAX_HELP) unless markup =~ SYNTAX
-      @what = $1
+      @what = Variable.new $1
       super
     end
 
     def render(context)
-      key = context[@what]
+      key = @what.render context
       key = EMPTY_YIELD_KEY if !key || key.empty?
       res = context.content_for[key]
       if !res || res.empty?
@@ -42,5 +42,5 @@ module Liquid
     end
   end
 
-  Template.register_tag 'yield', Yield
+  Template.register_tag 'yield', Tag::Yield
 end

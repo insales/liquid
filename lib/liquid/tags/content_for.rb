@@ -5,8 +5,9 @@ module Liquid
   # It saves rendered text between tags into context's _content_for_ field,
   # which is a hash.
   #
-  # You need explicitly set _context.content_for[Liquid::Yield::EMPTY_YIELD_KEY]_
-  # to rendered string.
+  # You need explicitly set _context.content_for[Liquid::Tag::Yield::EMPTY_YIELD_KEY]_
+  # to rendered string. There is shortcut _context.content_for_layout=_
+  # that sets it and _context['content_for_layout_']_.
   #
   # In your layout:
   #  <title>{% yield 'title' %}</title>
@@ -22,20 +23,21 @@ module Liquid
   #  <body>The body</body>
   #
   #
-  class ContentFor < Block
-    SYNTAX      = /(#{QuotedString}+)/
+  class Tag::ContentFor < Block
+    SYNTAX      = /([\S]+)/
     SYNTAX_HELP = "Syntax Error in tag 'content_for' - Valid syntax: content_for 'name'"
 
     def initialize(tag_name, markup, tokens)
       raise SyntaxError.new(SYNTAX_HELP) unless markup =~ SYNTAX
-      @name = $1
+      @name = Variable.new $1
       super
     end
 
     def render(context)
       result = ''
       context.stack { result = render_all @nodelist, context }
-      context.content_for[context[@name]] = result
+      key = @name.render context
+      context.content_for[key] = result
       ''
     end
 
@@ -48,7 +50,12 @@ module Liquid
     def content_for
       @content_for ||= {}
     end
+
+    def content_for_layout=(value)
+      content_for[Liquid::Tag::Yield::EMPTY_YIELD_KEY] =
+        self['content_for_layout'] = value
+    end
   end
 
-  Template.register_tag 'content_for', ContentFor
+  Template.register_tag 'content_for', Tag::ContentFor
 end
