@@ -110,6 +110,7 @@ module Liquid
 
     # Replace the first occurrences of a string with another
     def replace_first(input, string, replacement = '')
+      return input if !string || !replacement
       input.to_s.sub(string, replacement)
     end
 
