@@ -229,7 +229,9 @@ module Liquid
 
     # division
     def divided_by(input, operand)
-      to_number(input) / to_number(operand)
+      operand = to_number(operand)
+      raise(ArgumentError, "division by 0") if operand.zero?
+      to_number(input) / operand
     end
 
     def modulo(input, operand)
