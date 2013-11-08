@@ -207,6 +207,7 @@ module Liquid
 
     # Replace the first occurrences of a string with another
     def replace_first(input, string, replacement = ''.freeze)
+      return input if !string || !replacement
       input.to_s.sub(string.to_s, replacement.to_s)
     end
 

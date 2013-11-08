@@ -367,6 +367,8 @@ class StandardFiltersTest < Minitest::Test
     assert_template_result '2 1 1 1', "{{ '1 1 1 1' | replace_first: '1', 2 }}"
     assert_equal 'a a a a', @filters.replace("a a a a", 'a', nil)
     assert_equal 'a a a a', @filters.replace("a a a a", nil, 'a')
+    assert_equal 'a a a a', @filters.replace_first("a a a a", 'a', nil)
+    assert_equal 'a a a a', @filters.replace_first("a a a a", nil, 'a')
   end
 
   def test_remove
