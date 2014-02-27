@@ -11,7 +11,7 @@ module Liquid
           @attributes[key] = value
         end
       else
-        raise SyntaxError.new("Syntax Error in 'table_row loop' - Valid syntax: table_row [item] in [collection] cols=3")
+        raise SyntaxError.new(options[:locale].t("errors.syntax.table_row"))
       end
 
       super
@@ -23,7 +23,7 @@ module Liquid
       from = @attributes['offset'] ? context[@attributes['offset']].to_i : 0
       to = @attributes['limit'] ? from + context[@attributes['limit']].to_i : nil
 
-      collection = Utils.slice_collection_using_each(collection, from, to)
+      collection = Utils.slice_collection(collection, from, to)
 
       length = collection.length
 
@@ -57,7 +57,7 @@ module Liquid
 
           result << "<td class=\"col#{col}\">" << render_all(@nodelist, context) << '</td>'
 
-          if col == cols and not (index == length - 1)
+          if col == cols and (index != length - 1)
             col  = 0
             row += 1
             result << "</tr>\n<tr class=\"row#{row}\">"

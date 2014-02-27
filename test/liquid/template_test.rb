@@ -1,5 +1,27 @@
 require 'test_helper'
 
+class TemplateContextDrop < Liquid::Drop
+  def before_method(method)
+    method
+  end
+
+  def foo
+    'fizzbuzz'
+  end
+
+  def baz
+    @context.registers['lulz']
+  end
+end
+
+class SomethingWithLength
+  def length
+    nil
+  end
+
+  liquid_methods :length
+end
+
 class TemplateTest < Test::Unit::TestCase
   include Liquid
 
@@ -72,6 +94,12 @@ class TemplateTest < Test::Unit::TestCase
     @global = nil
   end
 
+  def test_resource_limits_works_with_custom_length_method
+    t = Template.parse("{% assign foo = bar %}")
+    t.resource_limits = { :render_length_limit => 42 }
+    assert_equal "", t.render("bar" => SomethingWithLength.new)
+  end
+
   def test_resource_limits_render_length
     t = Template.parse("0123456789")
     t.resource_limits = { :render_length_limit => 5 }
@@ -120,4 +148,27 @@ class TemplateTest < Test::Unit::TestCase
     assert t.resource_limits[:render_score_current] > 0
     assert t.resource_limits[:render_length_current] > 0
   end
-end # TemplateTest
+
+  def test_can_use_drop_as_context
+    t = Template.new
+    t.registers['lulz'] = 'haha'
+    drop = TemplateContextDrop.new
+    assert_equal 'fizzbuzz', t.parse('{{foo}}').render(drop)
+    assert_equal 'bar', t.parse('{{bar}}').render(drop)
+    assert_equal 'haha', t.parse("{{baz}}").render(drop)
+  end
+
+  def test_sets_default_localization_in_document
+    t = Template.new
+    t.parse('')
+    assert_instance_of I18n, t.root.options[:locale]
+  end
+
+  def test_sets_default_localization_in_context_with_quick_initialization
+    t = Template.new
+    t.parse('{{foo}}', :locale => I18n.new(fixture("en_locale.yml")))
+
+    assert_instance_of I18n, t.root.options[:locale]
+    assert_equal fixture("en_locale.yml"), t.root.options[:locale].path
+  end
+end

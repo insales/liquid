@@ -18,7 +18,7 @@ module Liquid
       if markup =~ Syntax
         @to = $1
       else
-        raise SyntaxError.new("Syntax Error in 'capture' - Valid syntax: capture [var]")
+        raise SyntaxError.new(options[:locale].t("errors.syntax.capture"))
       end
 
       super
@@ -27,8 +27,12 @@ module Liquid
     def render(context)
       output = super
       context.scopes.last[@to] = output
-      context.resource_limits[:assign_score_current] += (output.respond_to?(:length) ? output.length : 1)
+      context.increment_used_resources(:assign_score_current, output)
       ''
+    end
+
+    def blank?
+      true
     end
   end
 

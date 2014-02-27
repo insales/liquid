@@ -1,6 +1,6 @@
 module Liquid
   # Within the context of a layout, yield identifies a section where content
-  # from the view should be inserted. 
+  # from the view should be inserted.
   # The simplest way to use this is to have a single yield, into which the
   # entire contents of the view currently being rendered is inserted.
   #
@@ -10,7 +10,7 @@ module Liquid
   #
   # In the view:
   #  {% content_for 'title' %} The title {% end_content_for %}
-  #  The body    
+  #  The body
   #
   #
   # Will produce:
@@ -25,12 +25,12 @@ module Liquid
 
     def initialize(tag_name, markup, tokens)
       raise SyntaxError.new(SYNTAX_HELP) unless markup =~ SYNTAX
-      @what = Variable.new $1
+      @what = !$1.empty? && Variable.new($1)
       super
     end
 
     def render(context)
-      key = @what.render context
+      key = @what && @what.render(context)
       key = EMPTY_YIELD_KEY if !key || key.empty?
       res = context.content_for[key]
       if !res || res.empty?

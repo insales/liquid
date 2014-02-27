@@ -187,16 +187,16 @@ HERE
     expected = "1234"
     assert_template_result(expected,markup,assigns)
 
-    # tests to ensure it only breaks out of the local for loop 
+    # tests to ensure it only breaks out of the local for loop
     # and not all of them.
     assigns = {'array' => [[1,2],[3,4],[5,6]] }
-    markup = '{% for item in array %}' + 
-               '{% for i in item %}' + 
-                 '{% if i == 1 %}' + 
-                   '{% break %}' + 
-                 '{% endif %}' + 
-                 '{{ i }}' + 
-               '{% endfor %}' + 
+    markup = '{% for item in array %}' +
+               '{% for i in item %}' +
+                 '{% if i == 1 %}' +
+                   '{% break %}' +
+                 '{% endif %}' +
+                 '{{ i }}' +
+               '{% endfor %}' +
              '{% endfor %}'
     expected = '3456'
     assert_template_result(expected, markup, assigns)
@@ -213,15 +213,15 @@ HERE
 
     markup = '{% for i in array.items %}{% continue %}{% endfor %}'
     expected = ""
-    assert_template_result(expected,markup,assigns) 
+    assert_template_result(expected,markup,assigns)
 
     markup = '{% for i in array.items %}{{ i }}{% continue %}{% endfor %}'
     expected = "12345"
-    assert_template_result(expected,markup,assigns) 
+    assert_template_result(expected,markup,assigns)
 
     markup = '{% for i in array.items %}{% continue %}{{ i }}{% endfor %}'
     expected = ""
-    assert_template_result(expected,markup,assigns) 
+    assert_template_result(expected,markup,assigns)
 
     markup = '{% for i in array.items %}{% if i > 3 %}{% continue %}{% endif %}{{ i }}{% endfor %}'
     expected = "123"
@@ -233,13 +233,13 @@ HERE
 
     # tests to ensure it only continues the local for loop and not all of them.
     assigns = {'array' => [[1,2],[3,4],[5,6]] }
-    markup = '{% for item in array %}' + 
-               '{% for i in item %}' + 
-                 '{% if i == 1 %}' + 
-                   '{% continue %}' + 
-                 '{% endif %}' + 
-                 '{{ i }}' + 
-               '{% endfor %}' + 
+    markup = '{% for item in array %}' +
+               '{% for i in item %}' +
+                 '{% if i == 1 %}' +
+                   '{% continue %}' +
+                 '{% endif %}' +
+                 '{{ i }}' +
+               '{% endfor %}' +
              '{% endfor %}'
     expected = '23456'
     assert_template_result(expected, markup, assigns)
@@ -253,32 +253,113 @@ HERE
 
   def test_for_tag_string
     # ruby 1.8.7 "String".each => Enumerator with single "String" element.
-    # ruby 1.9.3 no longer supports .each on String though we mimic 
+    # ruby 1.9.3 no longer supports .each on String though we mimic
     # the functionality for backwards compatibility
 
-    assert_template_result('test string', 
-                '{%for val in string%}{{val}}{%endfor%}', 
+    assert_template_result('test string',
+                '{%for val in string%}{{val}}{%endfor%}',
                 'string' => "test string")
 
-    assert_template_result('test string', 
-                '{%for val in string limit:1%}{{val}}{%endfor%}', 
+    assert_template_result('test string',
+                '{%for val in string limit:1%}{{val}}{%endfor%}',
                 'string' => "test string")
 
-    assert_template_result('val-string-1-1-0-1-0-true-true-test string', 
-                '{%for val in string%}' + 
-                '{{forloop.name}}-' + 
-                '{{forloop.index}}-' + 
-                '{{forloop.length}}-' + 
-                '{{forloop.index0}}-' + 
-                '{{forloop.rindex}}-' + 
-                '{{forloop.rindex0}}-' + 
-                '{{forloop.first}}-' + 
-                '{{forloop.last}}-' + 
-                '{{val}}{%endfor%}', 
+    assert_template_result('val-string-1-1-0-1-0-true-true-test string',
+                '{%for val in string%}' +
+                '{{forloop.name}}-' +
+                '{{forloop.index}}-' +
+                '{{forloop.length}}-' +
+                '{{forloop.index0}}-' +
+                '{{forloop.rindex}}-' +
+                '{{forloop.rindex0}}-' +
+                '{{forloop.first}}-' +
+                '{{forloop.last}}-' +
+                '{{val}}{%endfor%}',
                 'string' => "test string")
   end
 
   def test_blank_string_not_iterable
     assert_template_result('', "{% for char in characters %}I WILL NOT BE OUTPUT{% endfor %}", 'characters' => '')
+  end
+
+  def test_bad_variable_naming_in_for_loop
+    assert_raise(Liquid::SyntaxError) do
+      Liquid::Template.parse('{% for a/b in x %}{% endfor %}')
+    end
+  end
+
+  def test_spacing_with_variable_naming_in_for_loop
+    expected = '12345'
+    template = '{% for       item   in   items %}{{item}}{% endfor %}'
+    assigns  = {'items' => [1,2,3,4,5]}
+    assert_template_result(expected, template, assigns)
+  end
+
+  def test_for_nodelist
+    template = Liquid::Template.parse('{% for item in items %}FOR{% endfor %}')
+    assert_equal ['FOR'], template.root.nodelist[0].nodelist
+  end
+
+  def test_for_else_nodelist
+    template = Liquid::Template.parse('{% for item in items %}FOR{% else %}ELSE{% endfor %}')
+    assert_equal ['FOR', 'ELSE'], template.root.nodelist[0].nodelist
+  end
+
+  class LoaderDrop < Liquid::Drop
+    attr_accessor :each_called, :load_slice_called
+
+    def initialize(data)
+      @data = data
+    end
+
+    def each
+      @each_called = true
+      @data.each { |el| yield el }
+    end
+
+    def load_slice(from, to)
+      @load_slice_called = true
+      @data[(from..to-1)]
+    end
+  end
+
+  def test_iterate_with_each_when_no_limit_applied
+    loader = LoaderDrop.new([1,2,3,4,5])
+    assigns = {'items' => loader}
+    expected = '12345'
+    template = '{% for item in items %}{{item}}{% endfor %}'
+    assert_template_result(expected, template, assigns)
+    assert loader.each_called
+    assert !loader.load_slice_called
+  end
+
+  def test_iterate_with_load_slice_when_limit_applied
+    loader = LoaderDrop.new([1,2,3,4,5])
+    assigns = {'items' => loader}
+    expected = '1'
+    template = '{% for item in items limit:1 %}{{item}}{% endfor %}'
+    assert_template_result(expected, template, assigns)
+    assert !loader.each_called
+    assert loader.load_slice_called
+  end
+
+  def test_iterate_with_load_slice_when_limit_and_offset_applied
+    loader = LoaderDrop.new([1,2,3,4,5])
+    assigns = {'items' => loader}
+    expected = '34'
+    template = '{% for item in items offset:2 limit:2 %}{{item}}{% endfor %}'
+    assert_template_result(expected, template, assigns)
+    assert !loader.each_called
+    assert loader.load_slice_called
+  end
+
+  def test_iterate_with_load_slice_returns_same_results_as_without
+    loader = LoaderDrop.new([1,2,3,4,5])
+    loader_assigns = {'items' => loader}
+    array_assigns = {'items' => [1,2,3,4,5]}
+    expected = '34'
+    template = '{% for item in items offset:2 limit:2 %}{{item}}{% endfor %}'
+    assert_template_result(expected, template, loader_assigns)
+    assert_template_result(expected, template, array_assigns)
   end
 end

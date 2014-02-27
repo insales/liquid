@@ -22,6 +22,13 @@ class StrainerTest < Test::Unit::TestCase
     assert_equal "public", strainer.invoke("public_filter")
   end
 
+  def test_stainer_raises_argument_error
+    strainer = Strainer.create(nil)
+    assert_raises(Liquid::ArgumentError) do
+      strainer.invoke("public_filter", 1)
+    end
+  end
+
   def test_strainer_only_invokes_public_filter_methods
     strainer = Strainer.create(nil)
     assert_equal false, strainer.invokable?('__test__')
@@ -47,6 +54,17 @@ class StrainerTest < Test::Unit::TestCase
     assert_equal "1 + 1", strainer.invoke("instance_eval", "1 + 1")
     assert_equal "puts",  strainer.invoke("__send__", "puts", "Hi Mom")
     assert_equal "has_method?", strainer.invoke("invoke", "has_method?", "invoke")
+  end
+
+  def test_strainer_uses_a_class_cache_to_avoid_method_cache_invalidation
+    a, b = Module.new, Module.new
+    strainer = Strainer.create(nil, [a,b])
+    assert_kind_of Strainer, strainer
+    assert_kind_of a, strainer
+    assert_kind_of b, strainer
+    Strainer.class_variable_get(:@@filters).each do |m|
+      assert_kind_of m, strainer
+    end
   end
 
 end # StrainerTest
