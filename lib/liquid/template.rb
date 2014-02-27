@@ -15,7 +15,6 @@ module Liquid
   #
   class Template
     DEFAULT_OPTIONS = {
-      :locale => I18n.new
     }
 
     attr_accessor :root, :resource_limits

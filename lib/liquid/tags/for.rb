@@ -135,14 +135,14 @@ module Liquid
           @attributes[key] = value
         end
       else
-        raise SyntaxError.new(options[:locale].t("errors.syntax.for"))
+        raise SyntaxError.new("Syntax Error in 'for loop' - Valid syntax: for [item] in [collection]")
       end
     end
 
     def strict_parse(markup)
       p = Parser.new(markup)
       @variable_name = p.consume(:id)
-      raise SyntaxError.new(options[:locale].t("errors.syntax.for_invalid_in"))  unless p.id?('in')
+      raise SyntaxError.new("errors.syntax.for_invalid_in")  unless p.id?('in')
       @collection_name = p.expression
       @name = "#{@variable_name}-#{@collection_name}"
       @reversed = p.id?('reversed')
@@ -150,7 +150,7 @@ module Liquid
       @attributes = {}
       while p.look(:id) && p.look(:colon, 1)
         unless attribute = p.id?('limit') || p.id?('offset')
-          raise SyntaxError.new(options[:locale].t("errors.syntax.for_invalid_attribute"))
+          raise SyntaxError.new("errors.syntax.for_invalid_attribute")
         end
         p.consume
         val = p.expression

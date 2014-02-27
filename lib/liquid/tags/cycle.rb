@@ -24,7 +24,7 @@ module Liquid
         @variables = variables_from_string(markup)
         @name = "'#{@variables.to_s}'"
       else
-        raise SyntaxError.new(options[:locale].t("errors.syntax.cycle"))
+        raise SyntaxError.new("Syntax Error in 'cycle' - Valid syntax: cycle [name :] var [, var2, var3 ...]")
       end
       super
     end
