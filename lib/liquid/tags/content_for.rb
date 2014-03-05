@@ -1,7 +1,7 @@
 module Liquid
-  # The content_for method allows you to insert content into a yield block in your layout. 
-  # You only use content_for to insert content in named yields. 
-  # 
+  # The content_for method allows you to insert content into a yield block in your layout.
+  # You only use content_for to insert content in named yields.
+  #
   # It saves rendered text between tags into context's _content_for_ field,
   # which is a hash.
   #
@@ -15,7 +15,7 @@ module Liquid
   #
   # In the view:
   #  {% content_for 'title' %} The title {% end_content_for %}
-  #  The body    
+  #  The body
   #
   #
   # Will produce:
@@ -43,6 +43,10 @@ module Liquid
 
     def block_delimiter
       "end_#{block_name}"
+    end
+
+    def blank?
+      true
     end
   end
 
