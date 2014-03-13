@@ -108,8 +108,7 @@ module Liquid
 
     # Reverse the elements of an array
     def reverse(input)
-      ary = [input].flatten
-      ary.reverse
+      [input].flatten.reverse
     end
 
     # map/collect on a given property

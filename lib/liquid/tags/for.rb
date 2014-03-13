@@ -107,7 +107,8 @@ module Liquid
             'rindex'  => length - index,
             'rindex0' => length - index - 1,
             'first'   => (index == 0),
-          'last'    => (index == length - 1) }
+            'last'    => (index == length - 1)
+          }
 
           result << render_all(@for_block, context)
 

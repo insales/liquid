@@ -53,7 +53,7 @@ module Liquid
     def strict_parse_with_error_context(markup)
       strict_parse(markup)
     rescue SyntaxError => e
-      e.message << " in \"#{markup.strip}\"" 
+      e.message << " in \"#{markup.strip}\""
       raise e
     end
   end # Tag
