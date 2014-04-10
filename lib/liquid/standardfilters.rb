@@ -290,7 +290,7 @@ module Liquid
       when String
         (obj.strip =~ /^\d+\.\d+$/) ? BigDecimal.new(obj) : obj.to_i
       else
-        0
+        obj.respond_to?(:to_f) ? BigDecimal.new(obj.to_f.to_s) : 0
       end
     end
 
