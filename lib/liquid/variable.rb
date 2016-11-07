@@ -1,5 +1,4 @@
 module Liquid
-
   # Holds variables. Variables are only loaded "just in time"
   # and are not evaluated as part of the render stage
   #
@@ -11,98 +10,126 @@ module Liquid
   #   {{ user | link }}
   #
   class Variable
-    FilterParser = /(?:#{FilterSeparator}|(?:\s*(?:#{QuotedFragment}|#{ArgumentSeparator})\s*)+)/o
-    EasyParse = /^ *(\w+(?:\.\w+)*) *$/
-    attr_accessor :filters, :name, :warnings
+    FilterParser = /(?:\s+|#{QuotedFragment}|#{ArgumentSeparator})+/o
+    attr_accessor :filters, :name, :line_number
+    attr_reader :parse_context
+    alias_method :options, :parse_context
+    include ParserSwitching
 
-    def initialize(markup, options = {})
+    def initialize(markup, parse_context)
       @markup  = markup
       @name    = nil
-      @options = options || {}
+      @parse_context = parse_context
+      @line_number = parse_context.line_number
 
+      parse_with_selected_parser(markup)
+    end
 
-      case @options[:error_mode] || Template.error_mode
-      when :strict then strict_parse(markup)
-      when :lax    then lax_parse(markup)
-      when :warn
-        begin
-          strict_parse(markup)
-        rescue SyntaxError => e
-          @warnings ||= []
-          @warnings << e
-          lax_parse(markup)
-        end
-      end
+    def raw
+      @markup
+    end
+
+    def markup_context(markup)
+      "in \"{{#{markup}}}\""
     end
 
     def lax_parse(markup)
       @filters = []
-      if match = markup.match(/\s*(#{QuotedFragment})(.*)/o)
-        @name = match[1]
-        if match[2].match(/#{FilterSeparator}\s*(.*)/o)
-          filters = Regexp.last_match(1).scan(FilterParser)
-          filters.each do |f|
-            if matches = f.match(/\s*(\w+)/)
-              filtername = matches[1]
-              filterargs = f.scan(/(?:#{FilterArgumentSeparator}|#{ArgumentSeparator})\s*((?:\w+\s*\:\s*)?#{QuotedFragment})/o).flatten
-              @filters << [filtername, filterargs]
-            end
-          end
+      return unless markup =~ /(#{QuotedFragment})(.*)/om
+
+      name_markup = $1
+      filter_markup = $2
+      @name = Expression.parse(name_markup)
+      if filter_markup =~ /#{FilterSeparator}\s*(.*)/om
+        filters = $1.scan(FilterParser)
+        filters.each do |f|
+          next unless f =~ /\w+/
+          filtername = Regexp.last_match(0)
+          filterargs = f.scan(/(?:#{FilterArgumentSeparator}|#{ArgumentSeparator})\s*((?:\w+\s*\:\s*)?#{QuotedFragment})/o).flatten
+          @filters << parse_filter_expressions(filtername, filterargs)
         end
       end
     end
 
     def strict_parse(markup)
-      # Very simple valid cases
-      if markup =~ EasyParse
-        @name = $1
-        @filters = []
-        return
-      end
-
       @filters = []
       p = Parser.new(markup)
-      # Could be just filters with no input
-      @name = p.look(:pipe) ? '' : p.expression
+
+      @name = Expression.parse(p.expression)
       while p.consume?(:pipe)
         filtername = p.consume(:id)
         filterargs = p.consume?(:colon) ? parse_filterargs(p) : []
-        @filters << [filtername, filterargs]
+        @filters << parse_filter_expressions(filtername, filterargs)
       end
       p.consume(:end_of_string)
-    rescue SyntaxError => e
-      e.message << " in \"{{#{markup}}}\""
-      raise e
     end
 
     def parse_filterargs(p)
       # first argument
       filterargs = [p.argument]
       # followed by comma separated others
-      while p.consume?(:comma)
-        filterargs << p.argument
-      end
+      filterargs << p.argument while p.consume?(:comma)
       filterargs
     end
 
     def render(context)
-      return '' if @name.nil?
-      @filters.inject(context[@name]) do |output, filter|
-        filterargs = []
-        keyword_args = {}
-        filter[1].to_a.each do |a|
-          if matches = a.match(/\A#{TagAttributes}\z/o)
-            keyword_args[matches[1]] = context[matches[2]]
-          else
-            filterargs << context[a]
-          end
+      obj = @filters.inject(context.evaluate(@name)) do |output, (filter_name, filter_args, filter_kwargs)|
+        filter_args = evaluate_filter_expressions(context, filter_args, filter_kwargs)
+        context.invoke(filter_name, output, *filter_args)
+      end
+
+      obj = context.apply_global_filter(obj)
+
+      taint_check(context, obj)
+
+      obj
+    end
+
+    private
+
+    def parse_filter_expressions(filter_name, unparsed_args)
+      filter_args = []
+      keyword_args = {}
+      unparsed_args.each do |a|
+        if matches = a.match(/\A#{TagAttributes}\z/o)
+          keyword_args[matches[1]] = Expression.parse(matches[2])
+        else
+          filter_args << Expression.parse(a)
         end
-        filterargs << keyword_args unless keyword_args.empty?
-        begin
-          output = context.invoke(filter[0], output, *filterargs)
-        rescue FilterNotFound
-          raise FilterNotFound, "Error - filter '#{filter[0]}' in '#{@markup.strip}' could not be found."
+      end
+      result = [filter_name, filter_args]
+      result << keyword_args unless keyword_args.empty?
+      result
+    end
+
+    def evaluate_filter_expressions(context, filter_args, filter_kwargs)
+      parsed_args = filter_args.map{ |expr| context.evaluate(expr) }
+      if filter_kwargs
+        parsed_kwargs = {}
+        filter_kwargs.each do |key, expr|
+          parsed_kwargs[key] = context.evaluate(expr)
         end
+        parsed_args << parsed_kwargs
+      end
+      parsed_args
+    end
+
+    def taint_check(context, obj)
+      return unless obj.tainted?
+      return if Template.taint_mode == :lax
+
+      @markup =~ QuotedFragment
+      name = Regexp.last_match(0)
+
+      error = TaintedError.new("variable '#{name}' is tainted and was not escaped")
+      error.line_number = line_number
+      error.template_name = context.template_name
+
+      case Template.taint_mode
+      when :warn
+        context.warnings << error
+      when :error
+        raise error
       end
     end
   end

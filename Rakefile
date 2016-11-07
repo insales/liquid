@@ -3,12 +3,12 @@ require 'rake/testtask'
 $LOAD_PATH.unshift File.expand_path("../lib", __FILE__)
 require "liquid/version"
 
-task :default => 'test'
+task default: [:rubocop, :test]
 
 desc 'run test suite with default parser'
 Rake::TestTask.new(:base_test) do |t|
   t.libs << '.' << 'lib' << 'test'
-  t.test_files = FileList['test/liquid/**/*_test.rb']
+  t.test_files = FileList['test/{integration,unit}/**/*_test.rb']
   t.verbose = false
 end
 
@@ -18,25 +18,43 @@ task :warn_test do
   Rake::Task['base_test'].invoke
 end
 
+task :rubocop do
+  require 'rubocop/rake_task'
+  RuboCop::RakeTask.new
+end
+
 desc 'runs test suite with both strict and lax parsers'
 task :test do
   ENV['LIQUID_PARSER_MODE'] = 'lax'
   Rake::Task['base_test'].invoke
+
   ENV['LIQUID_PARSER_MODE'] = 'strict'
   Rake::Task['base_test'].reenable
   Rake::Task['base_test'].invoke
+
+  if RUBY_ENGINE == 'ruby'
+    ENV['LIQUID-C'] = '1'
+
+    ENV['LIQUID_PARSER_MODE'] = 'lax'
+    Rake::Task['base_test'].reenable
+    Rake::Task['base_test'].invoke
+
+    ENV['LIQUID_PARSER_MODE'] = 'strict'
+    Rake::Task['base_test'].reenable
+    Rake::Task['base_test'].invoke
+  end
 end
 
-task :gem => :build
+task gem: :build
 task :build do
   system "gem build liquid.gemspec"
 end
 
-task :install => :build do
+task install: :build do
   system "gem install liquid-#{Liquid::VERSION}.gem"
 end
 
-task :release => :build do
+task release: :build do
   system "git tag -a v#{Liquid::VERSION} -m 'Tagging #{Liquid::VERSION}'"
   system "git push --tags"
   system "gem push liquid-#{Liquid::VERSION}.gem"
@@ -44,7 +62,6 @@ task :release => :build do
 end
 
 namespace :benchmark do
-
   desc "Run the liquid benchmark with lax parsing"
   task :run do
     ruby "./performance/benchmark.rb lax"
@@ -56,22 +73,23 @@ namespace :benchmark do
   end
 end
 
-
 namespace :profile do
-
   desc "Run the liquid profile/performance coverage"
   task :run do
     ruby "./performance/profile.rb"
   end
 
-  desc "Run KCacheGrind"
-  task :grind => :run  do
-    system "qcachegrind /tmp/liquid.rubyprof_calltreeprinter.txt"
+  desc "Run the liquid profile/performance coverage with strict parsing"
+  task :strict do
+    ruby "./performance/profile.rb strict"
   end
-
 end
 
 desc "Run example"
 task :example do
   ruby "-w -d -Ilib example/server/server.rb"
+end
+
+task :console do
+  exec 'irb -I lib -r liquid'
 end

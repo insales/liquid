@@ -2,16 +2,18 @@ require "strscan"
 module Liquid
   class Lexer
     SPECIALS = {
-      '|' => :pipe,
-      '.' => :dot,
-      ':' => :colon,
-      ',' => :comma,
-      '[' => :open_square,
-      ']' => :close_square,
-      '(' => :open_round,
-      ')' => :close_round
+      '|'.freeze => :pipe,
+      '.'.freeze => :dot,
+      ':'.freeze => :colon,
+      ','.freeze => :comma,
+      '['.freeze => :open_square,
+      ']'.freeze => :close_square,
+      '('.freeze => :open_round,
+      ')'.freeze => :close_round,
+      '?'.freeze => :question,
+      '-'.freeze => :dash
     }
-    IDENTIFIER = /[\w\-?!]+/
+    IDENTIFIER = /[a-zA-Z_][\w-]*\??/
     SINGLE_STRING_LITERAL = /'[^\']*'/
     DOUBLE_STRING_LITERAL = /"[^\"]*"/
     NUMBER_LITERAL = /-?\d+(\.\d+)?/
@@ -25,7 +27,7 @@ module Liquid
     def tokenize
       @output = []
 
-      while !@ss.eos?
+      until @ss.eos?
         @ss.skip(/\s*/)
         tok = case
         when t = @ss.scan(COMPARISON_OPERATOR) then [:comparison, t]
@@ -37,7 +39,7 @@ module Liquid
         else
           c = @ss.getch
           if s = SPECIALS[c]
-            [s,c]
+            [s, c]
           else
             raise SyntaxError, "Unexpected character #{c}"
           end

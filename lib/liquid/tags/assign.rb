@@ -1,5 +1,4 @@
 module Liquid
-
   # Assign sets a variable in your template.
   #
   #   {% assign foo = 'monkey' %}
@@ -9,30 +8,44 @@ module Liquid
   #  {{ foo }}
   #
   class Assign < Tag
-    Syntax = /(#{VariableSignature}+)\s*=\s*(.*)\s*/o
+    Syntax = /(#{VariableSignature}+)\s*=\s*(.*)\s*/om
 
-    def initialize(tag_name, markup, tokens)
+    def initialize(tag_name, markup, options)
+      super
       if markup =~ Syntax
         @to = $1
-        @from = Variable.new($2)
+        @from = Variable.new($2, options)
       else
         raise SyntaxError.new("Syntax Error in 'assign' - Valid syntax: assign [var] = [source]")
       end
-
-      super
     end
 
     def render(context)
       val = @from.render(context)
       context.scopes.last[@to] = val
-      context.increment_used_resources(:assign_score_current, val)
-      ''
+      context.resource_limits.assign_score += assign_score_of(val)
+      ''.freeze
     end
 
     def blank?
       true
     end
+
+    private
+
+    def assign_score_of(val)
+      if val.instance_of?(String)
+        val.length
+      elsif val.instance_of?(Array) || val.instance_of?(Hash)
+        sum = 1
+        # Uses #each to avoid extra allocations.
+        val.each { |child| sum += assign_score_of(child) }
+        sum
+      else
+        1
+      end
+    end
   end
 
-  Template.register_tag('assign', Assign)
+  Template.register_tag('assign'.freeze, Assign)
 end

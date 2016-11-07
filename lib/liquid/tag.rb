@@ -1,60 +1,43 @@
 module Liquid
   class Tag
-    attr_accessor :options
-    attr_reader :nodelist, :warnings
+    attr_reader :nodelist, :tag_name, :line_number, :parse_context
+    alias_method :options, :parse_context
+    include ParserSwitching
 
-    def self.new_with_options(tag_name, markup, tokens, options)
-      # Forgive me Matz for I have sinned. I know this code is weird
-      # but it was necessary to maintain API compatibility.
-      new_tag = self.allocate
-      new_tag.options = options
-      new_tag.send(:initialize, tag_name, markup, tokens)
-      new_tag
+    class << self
+      def parse(tag_name, markup, tokenizer, options)
+        tag = new(tag_name, markup, options)
+        tag.parse(tokenizer)
+        tag
+      end
+
+      private :new
     end
 
-    def initialize(tag_name, markup, tokens)
+    def initialize(tag_name, markup, parse_context)
       @tag_name   = tag_name
       @markup     = markup
-      @options    ||= {} # needs || because might be set before initialize
-      parse(tokens)
+      @parse_context = parse_context
+      @line_number = parse_context.line_number
     end
 
-    def parse(tokens)
+    def parse(_tokens)
+    end
+
+    def raw
+      "#{@tag_name} #{@markup}"
     end
 
     def name
       self.class.name.downcase
     end
 
-    def render(context)
-      ''
+    def render(_context)
+      ''.freeze
     end
 
     def blank?
-      @blank || false
+      false
     end
-
-    def parse_with_selected_parser(markup)
-      case @options[:error_mode] || Template.error_mode
-      when :strict then strict_parse_with_error_context(markup)
-      when :lax    then lax_parse(markup)
-      when :warn
-        begin
-          return strict_parse_with_error_context(markup)
-        rescue SyntaxError => e
-          @warnings ||= []
-          @warnings << e
-          return lax_parse(markup)
-        end
-      end
-    end
-
-    private
-    def strict_parse_with_error_context(markup)
-      strict_parse(markup)
-    rescue SyntaxError => e
-      e.message << " in \"#{markup.strip}\""
-      raise e
-    end
-  end # Tag
-end # Liquid
+  end
+end
