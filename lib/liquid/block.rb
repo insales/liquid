@@ -25,9 +25,9 @@ module Liquid
 
     def unknown_tag(tag, _params, _tokens)
       case tag
-      when 'else'
+      when 'else'.freeze
         raise SyntaxError, "#{block_name} tag does not expect else tag"
-      when 'end'
+      when 'end'.freeze
         raise SyntaxError, "'end' is not a valid delimiter for #{block_name} tags. use #{block_delimiter}"
       else
         raise SyntaxError, "Unknown tag '#{tag}'"
