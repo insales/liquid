@@ -5,7 +5,6 @@ module Liquid
 
     def initialize(options = {})
       @template_options = options ? options.dup : {}
-      # @locale = @template_options[:locale] ||= I18n.new
       @warnings = []
       self.partial = false
     end
@@ -26,7 +25,6 @@ module Liquid
         dont_pass = @template_options[:include_options_blacklist]
         if dont_pass == true
           {}
-          # { locale: locale }
         elsif dont_pass.is_a?(Array)
           @template_options.reject { |k, v| dont_pass.include?(k) }
         else
