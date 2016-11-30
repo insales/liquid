@@ -45,6 +45,13 @@ task :test do
   end
 end
 
+desc 'runs InSales tests'
+Rake::TestTask.new(:insales_test) do |t|
+  t.libs << '.' << 'lib' << 'test' << 'insales_test'
+  t.test_files = FileList['insales_test/**/*_test.rb']
+  t.verbose = false
+end
+
 task gem: :build
 task :build do
   system "gem build liquid.gemspec"
