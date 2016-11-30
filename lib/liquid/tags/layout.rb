@@ -3,12 +3,12 @@ module Liquid
   #
   #
   class Tag::Layout < Tag
-    SYNTAX      = /(.*)/
     SYNTAX_HELP = "Syntax Error in 'layout' - Valid syntax: layout value"
 
-    def initialize(tag_name, markup, tokens)
-      raise SyntaxError.new(SYNTAX_HELP) unless markup =~ SYNTAX
-      @name = Variable.new $1
+    def initialize(tag_name, markup, parse_context)
+      # same as #blank? in Rails
+      raise SyntaxError.new(SYNTAX_HELP) unless markup =~ /[^[:space:]]/
+      @name = Variable.new(markup, parse_context)
       super
     end
 

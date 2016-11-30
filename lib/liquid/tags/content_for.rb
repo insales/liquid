@@ -27,15 +27,15 @@ module Liquid
     SYNTAX      = /([\S]+)/
     SYNTAX_HELP = "Syntax Error in tag 'content_for' - Valid syntax: content_for 'name'"
 
-    def initialize(tag_name, markup, tokens)
-      raise SyntaxError.new(SYNTAX_HELP) unless markup =~ SYNTAX
-      @name = Variable.new $1
+    def initialize(tag_name, markup, parse_context)
+      # same as #blank? in Rails
+      raise SyntaxError.new(SYNTAX_HELP) unless markup =~ /[^[:space:]]/
+      @name = Variable.new(markup, parse_context)
       super
     end
 
     def render(context)
-      result = ''
-      context.stack { result = render_all @nodelist, context }
+      result = super
       key = @name.render context
       context.content_for[key] = result
       ''

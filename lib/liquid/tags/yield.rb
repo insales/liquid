@@ -21,11 +21,12 @@ module Liquid
   class Tag::Yield < Tag
     SYNTAX      = /(.*)/
     SYNTAX_HELP = "Syntax Error in 'yield' - Valid syntax: yield ['name']"
+    # This is key that will be used if you haven't specified one
     EMPTY_YIELD_KEY = '_rendered_template_'
 
-    def initialize(tag_name, markup, tokens)
+    def initialize(tag_name, markup, parse_context)
       raise SyntaxError.new(SYNTAX_HELP) unless markup =~ SYNTAX
-      @what = !$1.empty? && Variable.new($1)
+      @what = !markup.empty? && Variable.new(markup, parse_context)
       super
     end
 
