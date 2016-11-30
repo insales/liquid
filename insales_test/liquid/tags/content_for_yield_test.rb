@@ -51,7 +51,7 @@ main
   end
 
   def test_syntax
-    assert_raise Liquid::SyntaxError do
+    assert_raises Liquid::SyntaxError do
       Liquid::Template.parse '{% content_for %}{% end_content_for %}'
     end
   end
