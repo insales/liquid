@@ -1,6 +1,6 @@
 require 'test_helper'
 
-class LayoutTest < Test::Unit::TestCase
+class LayoutTest < Minitest::Test
   include Liquid
 
   def test_set_layout
