@@ -56,6 +56,10 @@ module Liquid
 
     alias_method :[], :invoke_drop
 
+    def to_json(options = {})
+      {}.to_json
+    end
+
     # Check for method existence without invoking respond_to?, which creates symbols
     def self.invokable?(method_name)
       invokable_methods.include?(method_name.to_s)
