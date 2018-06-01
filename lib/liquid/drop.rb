@@ -58,6 +58,14 @@ module Liquid
 
     alias :[] :invoke_drop
 
+    def as_json
+      {}.as_json
+    end
+
+    def to_json
+      {}.to_json
+    end
+
     private
 
     # Check for method existence without invoking respond_to?, which creates symbols
