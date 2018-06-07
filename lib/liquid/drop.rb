@@ -58,10 +58,6 @@ module Liquid
 
     alias :[] :invoke_drop
 
-    def as_json(options = {})
-      {}.as_json
-    end
-
     def to_json(options = {})
       {}.to_json
     end
