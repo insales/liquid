@@ -15,6 +15,19 @@ module Liquid
   class Context
     attr_reader :scopes, :errors, :registers, :environments, :resource_limits
 
+    class MethodLiteral
+      attr_reader :method_name, :to_s
+
+      def initialize(method_name, to_s)
+        @method_name = method_name
+        @to_s = to_s
+      end
+
+      def to_liquid
+        to_s
+      end
+    end
+
     def initialize(environments = {}, outer_scope = {}, registers = {}, rethrow_errors = false, resource_limits = {})
       @environments    = [environments].flatten
       @scopes          = [(outer_scope || {})]
@@ -154,8 +167,8 @@ module Liquid
         nil => nil, 'nil' => nil, 'null' => nil, '' => nil,
         'true'  => true,
         'false' => false,
-        'blank' => :blank?,
-        'empty' => :empty?
+        'blank' => MethodLiteral.new(:blank?, ''),
+        'empty' => MethodLiteral.new(:empty?, '')
       }
 
       # Look up variable, either resolve directly after considering the name. We can directly handle

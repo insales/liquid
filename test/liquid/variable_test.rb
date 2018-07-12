@@ -156,6 +156,16 @@ class VariableResolutionTest < Test::Unit::TestCase
     assert_equal '', template.render
   end
 
+  def test_using_blank_as_variable_name
+    template = Template.parse("{% assign foo = blank %}{{ foo }}")
+    assert_equal '', template.render!
+  end
+
+  def test_using_empty_as_variable_name
+    template = Template.parse("{% assign foo = empty %}{{ foo }}")
+    assert_equal '', template.render!
+  end
+
   def test_hash_scoping
     template = Template.parse(%|{{ test.test }}|)
     assert_equal 'worked', template.render('test' => {'test' => 'worked'})
