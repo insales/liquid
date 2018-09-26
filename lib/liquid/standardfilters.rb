@@ -103,7 +103,7 @@ module Liquid
 
     def strip_html(input)
       empty = ''.freeze
-      input.to_s.gsub(/<script.*?<\/script>/m, empty).gsub(/<!--.*?-->/m, empty).gsub(/<style.*?<\/style>/m, empty).gsub(/<.*?>/m, empty)
+      input.to_s.gsub(/<script.*?<\/script>/m, empty).gsub(/<!--.*?-->/m, empty).gsub(/<style.*?<\/style>/m, empty).gsub(/<.*?>/m, empty).gsub('&nbsp;'.freeze, ' '.freeze)
     end
 
     # Remove all newlines from the string
@@ -201,21 +201,25 @@ module Liquid
 
     # Replace occurrences of a string with another
     def replace(input, string, replacement = ''.freeze)
+      return input if !string || !replacement
       input.to_s.gsub(string.to_s, replacement.to_s)
     end
 
     # Replace the first occurrences of a string with another
     def replace_first(input, string, replacement = ''.freeze)
+      return input if !string || !replacement
       input.to_s.sub(string.to_s, replacement.to_s)
     end
 
     # remove a substring
     def remove(input, string)
+      return input if !string
       input.to_s.gsub(string.to_s, ''.freeze)
     end
 
     # remove the first occurrences of a substring
     def remove_first(input, string)
+      return input if !string
       input.to_s.sub(string.to_s, ''.freeze)
     end
 

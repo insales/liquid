@@ -177,6 +177,7 @@ class StandardFiltersTest < Minitest::Test
     assert_equal 'test', @filters.strip_html("<div\nclass='multiline'>test</div>")
     assert_equal 'test', @filters.strip_html("<!-- foo bar \n test -->test")
     assert_equal '', @filters.strip_html(nil)
+    assert_equal 'a  b', @filters.strip_html('a&nbsp;&nbsp;b')
   end
 
   def test_join
@@ -365,6 +366,10 @@ class StandardFiltersTest < Minitest::Test
     assert_equal '2 1 1 1', @filters.replace_first('1 1 1 1', '1', 2)
     assert_equal '2 1 1 1', @filters.replace_first('1 1 1 1', 1, 2)
     assert_template_result '2 1 1 1', "{{ '1 1 1 1' | replace_first: '1', 2 }}"
+    assert_equal 'a a a a', @filters.replace("a a a a", 'a', nil)
+    assert_equal 'a a a a', @filters.replace("a a a a", nil, 'a')
+    assert_equal 'a a a a', @filters.replace_first("a a a a", 'a', nil)
+    assert_equal 'a a a a', @filters.replace_first("a a a a", nil, 'a')
   end
 
   def test_remove
@@ -373,6 +378,8 @@ class StandardFiltersTest < Minitest::Test
     assert_equal 'a a a', @filters.remove_first("a a a a", 'a ')
     assert_equal ' 1 1 1', @filters.remove_first("1 1 1 1", 1)
     assert_template_result 'a a a', "{{ 'a a a a' | remove_first: 'a ' }}"
+    assert_equal 'a a a a', @filters.remove_first("a a a a", nil)
+    assert_equal 'a a a a', @filters.remove("a a a a", nil)
   end
 
   def test_pipes_in_string_arguments
